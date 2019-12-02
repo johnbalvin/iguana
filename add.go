@@ -82,6 +82,9 @@ func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[str
 			static.ChangeContent = true //verify is file can have dependencies
 		}
 		staticFiles[static.Path] = static
+		if strings.HasPrefix(static.Path, "./") {
+			staticFiles[static.Path[2:]] = static
+		}
 	}
 	for _, folder := range folders {
 		config.AddFiles(normal, folder, htmlFiles, staticFiles)
