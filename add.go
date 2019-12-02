@@ -41,6 +41,9 @@ func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[str
 		tempContent := string(content)
 		for dpendRelPath := range dpendRelPaths {
 			delimiter := string(dpendRelPath[0])
+			if dpendRelPath[0] != dpendRelPath[len(dpendRelPath)-1] { //this avoids false positives like string: I'm a false postive string.js" <- it maches because it has ' and "
+				continue
+			}
 			rawDpendRelPath := strings.TrimSpace(dpendRelPath[1 : len(dpendRelPath)-1]) //removing delimiters and spaces to use path.Join
 			join := path.Join(workingPath, rawDpendRelPath)                             //this gives me full path
 			dependecyFullPath := delimiter + join + delimiter
