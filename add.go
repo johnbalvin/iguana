@@ -10,7 +10,9 @@ import (
 
 //AddFiles add files to htmlFiles,staticFiles , also changes the inmediate relative path to a relative path base on the full path
 func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[string]HTML, staticFiles map[string]Static) {
-	fmt.Print(".")
+	if !config.SkipLogging {
+		fmt.Print(".")
+	}
 	subdirectories, err := ioutil.ReadDir(workingPath)
 	if err != nil {
 		log.Fatal("iguana -> AddFiles:1 -> err:", err)
@@ -46,6 +48,9 @@ func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[str
 			}
 			rawDpendRelPath := strings.TrimSpace(dpendRelPath[1 : len(dpendRelPath)-1]) //removing delimiters and spaces to use path.Join
 			join := path.Join(workingPath, rawDpendRelPath)                             //this gives me full path
+			if config.FuncReplaceRelPath(fullPath, rawDpendRelPath) {
+				continue
+			}
 			dependecyFullPath := delimiter + join + delimiter
 			tempContent = strings.ReplaceAll(tempContent, dpendRelPath, dependecyFullPath)
 			dependsFullPath[join] = true

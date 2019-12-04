@@ -35,7 +35,7 @@ func (config Config) changePathWithURL(normal bool, workingPath string, static S
 		if !dependency.ChangeContent { // content must no be changed, like image, fonts,  plain text
 			continue
 		}
-		if depthDependency, err := config.changePathWithURL(normal,workingPath, dependency, sw, staticFiles, depthDependency, deph); err != nil {
+		if depthDependency, err := config.changePathWithURL(normal, workingPath, dependency, sw, staticFiles, depthDependency, deph); err != nil {
 			depthDependency = append(depthDependency, static.Path)
 			return depthDependency, err
 		}
@@ -43,16 +43,16 @@ func (config Config) changePathWithURL(normal bool, workingPath string, static S
 		if dependency.Content.CheckSumChanged {
 			continue
 		}
-		dependency.Content.Me = replaceURL(normal, dependency.Path, dependency.Content.Me, config.SWPath, sw, staticFiles)
-			dependency.Content.Checksum = config.FuncCheckSum(dependency.Content.Me)
-			dependency.Content.ID, dependency.Content.URL = config.FuncIDURLNormal(dependency)
-			dependency.Content.CheckSumChanged = true
+		dependency.Content.Me = replaceURL(normal, config.SkipLogging, dependency.Path, dependency.Content.Me, config.SWPath, sw, staticFiles)
+		dependency.Content.Checksum = config.FuncCheckSum(dependency.Content.Me)
+		dependency.Content.ID, dependency.Content.URL = config.FuncIDURLNormal(dependency)
+		dependency.Content.CheckSumChanged = true
 		if !normal {
-			dependency.ContentObf.Me = replaceURL(normal, dependency.Path, dependency.Content.Me, config.SWPath, sw, staticFiles)
+			dependency.ContentObf.Me = replaceURL(normal, config.SkipLogging, dependency.Path, dependency.Content.Me, config.SWPath, sw, staticFiles)
 			dependency.ContentObf.Checksum = config.FuncCheckSum(dependency.Content.Me)
 			dependency.ContentObf.ID, dependency.ContentObf.URL = config.FuncIDURLObf(dependency)
 			dependency.ContentObf.CheckSumChanged = true
-		} 
+		}
 		staticFiles[dependencPath] = dependency
 
 	}
@@ -61,16 +61,16 @@ func (config Config) changePathWithURL(normal bool, workingPath string, static S
 		//fmt.Printf("---CheckSumChanged file: %s\n", static.Path)
 		return nil, nil
 	}
-	static.Content.Me = replaceURL(normal, static.Path, static.Content.Me, config.SWPath, sw, staticFiles)
+	static.Content.Me = replaceURL(normal, config.SkipLogging, static.Path, static.Content.Me, config.SWPath, sw, staticFiles)
 	static.Content.Checksum = config.FuncCheckSum(static.Content.Me)
 	static.Content.ID, static.Content.URL = config.FuncIDURLNormal(static)
 	static.Content.CheckSumChanged = true
 	if !normal {
-		static.ContentObf.Me = replaceURL(normal, static.Path, static.Content.Me, config.SWPath, sw, staticFiles)
+		static.ContentObf.Me = replaceURL(normal, config.SkipLogging, static.Path, static.Content.Me, config.SWPath, sw, staticFiles)
 		static.ContentObf.Checksum = config.FuncCheckSum(static.Content.Me)
 		static.ContentObf.ID, static.ContentObf.URL = config.FuncIDURLObf(static)
 		static.ContentObf.CheckSumChanged = true
-	} 
+	}
 	staticFiles[static.Path] = static
 	return nil, nil
 }
@@ -87,6 +87,10 @@ func (config Config) ChangePathWithURL(normal bool, workingPath string, serviceW
 		var depthDependencys []string
 
 		if depthDependencys, err = config.changePathWithURL(normal, workingPath, static, serviceWorkers, staticFiles, depthDependencys, 0); err != nil {
+
+			if config.SkipLogging {
+				continue
+			}
 			fmt.Printf("Err: %s\n", err)
 			j := 0
 			for i := len(depthDependencys) - 1; i >= 0; i-- {

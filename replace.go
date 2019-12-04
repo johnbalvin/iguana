@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func replaceURL(normal bool, parentPath string, content []byte, swPath string, sw map[string]string, staticFiles map[string]Static) []byte {
+func replaceURL(normal, skipLogging bool, parentPath string, content []byte, swPath string, sw map[string]string, staticFiles map[string]Static) []byte {
 	var inexistenDepencies []string
 	tempContent := string(content)
 	var dpendFullPaths = make(map[string]bool)
@@ -38,6 +38,9 @@ func replaceURL(normal bool, parentPath string, content []byte, swPath string, s
 		tempContent = strings.ReplaceAll(tempContent, dpendFullPath, replaceWith)
 	}
 	if len(inexistenDepencies) != 0 {
+		if skipLogging {
+			return []byte(tempContent)
+		}
 		fmt.Printf("Dependency missing at path: %s\n", parentPath)
 		for _, depencies := range inexistenDepencies {
 			fmt.Printf("   %s\n", depencies)

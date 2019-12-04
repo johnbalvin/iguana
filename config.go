@@ -15,6 +15,10 @@ func idURLGenetarorObf(static Static) (string, string) {
 	return id, id
 }
 
+func skippingDefault(filePath, pathToSkip string) bool {
+	return false
+}
+
 //ObfuscateStatic helper to obfuscate statics
 func ObfuscateStatic(static Static) (string, error) {
 	if static.Extension == "js" || static.Extension == "mjs" {
