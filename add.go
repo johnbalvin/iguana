@@ -6,7 +6,11 @@ import (
 	"log"
 	"path"
 	"strings"
+	"sync"
 )
+
+var lockHTML = sync.RWMutex{}
+var lockStatic = sync.RWMutex{}
 
 //AddFiles add files to htmlFiles,staticFiles , also changes the inmediate relative path to a relative path base on the full path
 func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[string]HTML, staticFiles map[string]Static) {
@@ -66,7 +70,7 @@ func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[str
 			html.Checksum = config.FuncCheckSum(html.Content)
 			key := strings.TrimLeft(html.Path, "./")
 			html.ServiceWorkers = make(map[string]bool)
-			htmlFiles[key] = html
+			writeToMapHTML(htmlFiles, key, html)
 			continue
 		}
 		var static Static
@@ -89,12 +93,28 @@ func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[str
 		if _, ok := mimeTypeReplace[ext]; ok {
 			static.ChangeContent = true //verify is file can have dependencies
 		}
-		staticFiles[static.Path] = static
+		writeToMapStatic(staticFiles, static.Path, static)
 		if strings.HasPrefix(static.Path, "./") {
-			staticFiles[static.Path[2:]] = static
+			writeToMapStatic(staticFiles, static.Path[2:], static)
 		}
 	}
+	var wg sync.WaitGroup
+	wg.Add(len(folders))
 	for _, folder := range folders {
-		config.AddFiles(normal, folder, htmlFiles, staticFiles)
+		go func(folder string) {
+			config.AddFiles(normal, folder, htmlFiles, staticFiles)
+			wg.Done()
+		}(folder)
 	}
+	wg.Wait()
+}
+func writeToMapHTML(htmlFiles map[string]HTML, key string, content HTML) {
+	lockHTML.Lock()
+	defer lockHTML.Unlock()
+	htmlFiles[key] = content
+}
+func writeToMapStatic(staticFiles map[string]Static, key string, content Static) {
+	lockStatic.Lock()
+	defer lockStatic.Unlock()
+	staticFiles[key] = content
 }
