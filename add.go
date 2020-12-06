@@ -2,13 +2,14 @@ package iguana
 
 import (
 	"fmt"
-	"github.c"om/johnbalvin/iguana/files"
 	"io/ioutil"
 	"log"
 	"path"
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/johnbalvin/iguana/files"
 )
 
 //addFiles add files to htmlFiles,staticFiles , also changes the inmediate relative path to a relative path base on the full path
