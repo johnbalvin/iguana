@@ -2,7 +2,7 @@ package iguana
 
 import (
 	"fmt"
-	"iguana/files"
+	github.com/johnbalvin/iguana/files"
 	"io/ioutil"
 	"log"
 	"path"

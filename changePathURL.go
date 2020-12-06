@@ -2,8 +2,8 @@ package iguana
 
 import (
 	"fmt"
-	"iguana/files"
-	"iguana/utils"
+	github.com/johnbalvin/iguana/files"
+	github.com/johnbalvin/iguana/utils"
 	"strings"
 )
 

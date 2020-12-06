@@ -1,9 +1,9 @@
 package iguana
 
 import (
-	"iguana/files"
-	"iguana/obfuscator"
-	"iguana/utils"
+	github.com/johnbalvin/iguana/files"
+	github.com/johnbalvin/iguana/obfuscator"
+	github.com/johnbalvin/iguana/utils"
 	"log"
 )
 
