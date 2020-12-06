@@ -2,34 +2,35 @@ package iguana
 
 import (
 	"fmt"
+	"iguana/files"
 	"log"
 	"path"
 	"strings"
 )
 
 //GetFiles returns files at a given path
-func (config Config) GetFiles(workingPath string) (map[string]HTML, map[string]Static, map[string]SW) {
+func (config Config) GetFiles(workingPath string) (map[string]files.HTML, map[string]files.Static, map[string]files.SW) {
 	if config.FuncReplaceRelPath == nil {
 		config.FuncReplaceRelPath = skippingDefault
 	}
-	return config.getFiles(true, workingPath)
+	return config.setFiles(true, workingPath)
 }
 
 //GetFilesObf returns files at a given path filling it with it's obfuscated content
-func (config Config) GetFilesObf(workingPath string) (map[string]HTML, map[string]Static, map[string]SW) {
+func (config Config) GetFilesObf(workingPath string) (map[string]files.HTML, map[string]files.Static, map[string]files.SW) {
 	if config.FuncReplaceRelPath == nil {
 		config.FuncReplaceRelPath = skippingDefault
 	}
-	return config.getFiles(false, workingPath)
+	return config.setFiles(false, workingPath)
 }
 
-func (config Config) getFiles(normal bool, workingPath string) (map[string]HTML, map[string]Static, map[string]SW) {
-	htmlFiles := make(map[string]HTML)
-	staticFiles := make(map[string]Static)
+func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[string]files.HTML, map[string]files.Static, map[string]files.SW) {
+	htmlFiles := make(map[string]files.HTML)
+	staticFiles := make(map[string]files.Static)
 	serviceWorkers := make(map[string]string)
-	config.AddFiles(normal, workingPath, htmlFiles, staticFiles)
+	config.addFiles(workingPath, htmlFiles, staticFiles)
 	fmt.Println("")
-	if !normal {
+	if !shouldIObfuscate {
 		for _, static := range staticFiles {
 			if !static.Obfuscate {
 				continue
@@ -45,22 +46,22 @@ func (config Config) getFiles(normal bool, workingPath string) (map[string]HTML,
 			staticFiles[static.Path] = static
 		}
 	}
-	config.ChangePathWithURL(normal, workingPath, serviceWorkers, staticFiles)
+	config.changePathWithURLWrapper(shouldIObfuscate, workingPath, serviceWorkers, staticFiles)
 	for k, html := range htmlFiles { //check service workers definitions inside html files
-		paths := regServiceW.FindAll(html.Content, -1)
+		paths := files.RegServiceW.FindAll(html.Content, -1)
 		for _, dpendRelPath := range paths { // -> serviceWorker.register("path.js")
-			jsPathR := string(regJs.Find(dpendRelPath))                       //-> "path.js"
+			jsPathR := string(files.RegJs.Find(dpendRelPath))                 //-> "path.js"
 			rawDpendRelPath := strings.TrimSpace(jsPathR[1 : len(jsPathR)-1]) //-> path.js
 			join := path.Join(workingPath, rawDpendRelPath)
 			serviceWorkers[join] = html.Path
 			html.ServiceWorkers[join] = true
 		}
 		//replace all urls paths in html content by their url
-		html.Content = replaceURL(normal, config.SkipLogging, html.Path, html.Content, config.SWPath, serviceWorkers, staticFiles)
+		html.Content = replaceURL(shouldIObfuscate, config.SkipLogging, html.Path, html.Content, config.SWPath, serviceWorkers, staticFiles)
 		html.Checksum = config.FuncCheckSum(html.Content)
 		htmlFiles[k] = html
 	}
-	serviceWorkersToReturn := make(map[string]SW)
+	serviceWorkersToReturn := make(map[string]files.SW)
 	for swPath, fileCaller := range serviceWorkers {
 		if static, ok := staticFiles[swPath]; ok { //check is static file is a service worker
 			static.Content.ID = config.SWPath + "/" + static.Content.Checksum + ".js"
@@ -69,7 +70,7 @@ func (config Config) getFiles(normal bool, workingPath string) (map[string]HTML,
 			static.ContentObf.ID = config.SWPath + "/" + static.ContentObf.Checksum + ".js"
 			static.ContentObf.URL = "/" + static.ContentObf.ID
 
-			serviceWorkersToReturn[static.Path] = SW{FileCaller: fileCaller, Static: static}
+			serviceWorkersToReturn[static.Path] = files.SW{FileCaller: fileCaller, Static: static}
 			delete(staticFiles, swPath)
 		} else {
 			//there  is not service work

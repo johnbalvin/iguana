@@ -2,24 +2,23 @@ package iguana
 
 import (
 	"fmt"
+	"iguana/files"
 	"io/ioutil"
 	"log"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 )
 
-var lockHTML = sync.RWMutex{}
-var lockStatic = sync.RWMutex{}
-
-//AddFiles add files to htmlFiles,staticFiles , also changes the inmediate relative path to a relative path base on the full path
-func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[string]HTML, staticFiles map[string]Static) {
+//addFiles add files to htmlFiles,staticFiles , also changes the inmediate relative path to a relative path base on the full path
+func (config Config) addFiles(workingPath string, htmlFiles map[string]files.HTML, staticFiles map[string]files.Static) {
 	if !config.SkipLogging {
 		fmt.Print(".")
 	}
 	subdirectories, err := ioutil.ReadDir(workingPath)
 	if err != nil {
-		log.Fatal("iguana -> AddFiles:1 -> err:", err)
+		log.Fatal("iguana -> addFiles:1 -> err:", err)
 	}
 	var folders []string
 	for _, subdirectory := range subdirectories {
@@ -28,18 +27,20 @@ func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[str
 			folders = append(folders, workingPath+"/"+name)
 			continue
 		}
-		separator := strings.Split(name, ".")
-		ext := separator[len(separator)-1]
-		if _, ok := mimeTypeAllow[ext]; !ok {
+		ext := filepath.Ext(name)
+		if _, ok := files.MimeTypeAllow[ext]; !ok {
 			continue
 		}
 		fullPath := workingPath + "/" + name
 		content, err := ioutil.ReadFile(fullPath)
 		if err != nil {
-			log.Fatal("iguana -> AddFiles:2 -> err:", err)
+			log.Fatal("iguana -> addFiles:2 -> err:", err)
+		}
+		if ext == ".css" {
+			content = files.CorrectFormatCss(content)
 		}
 		var dpendRelPaths = make(map[string]bool)
-		paths := regStatic.FindAll(content, -1)
+		paths := files.RegStatic.FindAll(content, -1)
 		for _, path := range paths { //remove repeated depencies like for example multiple images... if not, it could cause an overlay when replacing it's path
 			dpendRelPaths[string(path)] = true
 		}
@@ -52,6 +53,9 @@ func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[str
 			}
 			rawDpendRelPath := strings.TrimSpace(dpendRelPath[1 : len(dpendRelPath)-1]) //removing delimiters and spaces to use path.Join
 			join := path.Join(workingPath, rawDpendRelPath)                             //this gives me full path
+			if strings.HasPrefix(workingPath, "./") && !strings.HasPrefix(join, "./") { //path.join removes "./" so I will just add it
+				join = "./" + join
+			}
 			if config.FuncReplaceRelPath(fullPath, rawDpendRelPath) {
 				continue
 			}
@@ -59,8 +63,8 @@ func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[str
 			tempContent = strings.ReplaceAll(tempContent, dpendRelPath, dependecyFullPath)
 			dependsFullPath[join] = true
 		}
-		if ext == "html" {
-			var html HTML
+		if ext == ".html" {
+			var html files.HTML
 			html.DependsFullPath = dependsFullPath
 			html.Path = fullPath
 			if strings.Contains(tempContent, "{{") { // just to check if your html is completly static or you it generates data with templates
@@ -68,12 +72,12 @@ func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[str
 			}
 			html.Content = []byte(tempContent)
 			html.Checksum = config.FuncCheckSum(html.Content)
-			key := strings.TrimLeft(html.Path, "./")
 			html.ServiceWorkers = make(map[string]bool)
-			writeToMapHTML(htmlFiles, key, html)
+			writeToMapHTML(htmlFiles, html.Path, html)
 			continue
 		}
-		var static Static
+
+		var static files.Static
 		static.Name = name
 		static.Extension = ext
 		static.Path = fullPath
@@ -81,7 +85,7 @@ func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[str
 		static.Content.Me = []byte(tempContent)
 		static.Content.Checksum = config.FuncCheckSum(static.Content.Me)
 		static.Content.ID, static.Content.URL = config.FuncIDURLNormal(static)
-		static.MimeType = mimeTypeAllow[ext]
+		static.MimeType = files.MimeTypeAllow[ext]
 
 		if strings.Contains(static.Name, ".min.") { //minified files most not be obfuscated, I got headache debuging this
 			static.ContentObf.Me = static.Content.Me
@@ -90,30 +94,29 @@ func (config Config) AddFiles(normal bool, workingPath string, htmlFiles map[str
 		} else {
 			static.Obfuscate = true
 		}
-		if _, ok := mimeTypeReplace[ext]; ok {
+		if _, ok := files.MimeTypeReplace[ext]; ok {
 			static.ChangeContent = true //verify is file can have dependencies
 		}
-		writeToMapStatic(staticFiles, static.Path, static)
 		if strings.HasPrefix(static.Path, "./") {
-			writeToMapStatic(staticFiles, static.Path[2:], static)
+			writeToMapStatic(staticFiles, static.Path, static)
 		}
 	}
 	var wg sync.WaitGroup
 	wg.Add(len(folders))
 	for _, folder := range folders {
 		go func(folder string) {
-			config.AddFiles(normal, folder, htmlFiles, staticFiles)
-			wg.Done()
+			defer wg.Done()
+			config.addFiles(folder, htmlFiles, staticFiles)
 		}(folder)
 	}
 	wg.Wait()
 }
-func writeToMapHTML(htmlFiles map[string]HTML, key string, content HTML) {
+func writeToMapHTML(htmlFiles map[string]files.HTML, key string, content files.HTML) {
 	lockHTML.Lock()
 	defer lockHTML.Unlock()
 	htmlFiles[key] = content
 }
-func writeToMapStatic(staticFiles map[string]Static, key string, content Static) {
+func writeToMapStatic(staticFiles map[string]files.Static, key string, content files.Static) {
 	lockStatic.Lock()
 	defer lockStatic.Unlock()
 	staticFiles[key] = content

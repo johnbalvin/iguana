@@ -1,19 +1,20 @@
-package iguana
+package obfuscator
 
 import (
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"iguana/utils"
 	"io/ioutil"
 	"log"
 	"net/http"
 )
 
-func obfuscateJS(code []byte, url string, prefix string) (string, error) {
+func JS(code []byte, url string, prefix string) (string, error) {
 	fmt.Print("<")
-	data := obfuscator{Code: string(code)}
-	dataOptions := obfuscatorOptions{
+	data := Obfuscator{Code: string(code)}
+	dataOptions := ObfuscatorOptions{
 		Compact:                     true,
 		DeadCodeInjection:           true,
 		DeadCodeInjectionThreshold:  0.5,
@@ -42,11 +43,11 @@ func obfuscateJS(code []byte, url string, prefix string) (string, error) {
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
 	if err != nil {
 		log.Println("iguana -> obfuscateJS:2 -> err:", err)
-		return "", errObfuscatorServer
+		return "", ErrObfuscatorServer
 	}
 	switch resp.StatusCode {
 	case 200:
-		var resultado obfuscatorAnswer
+		var resultado ObfuscatorAnswer
 		if err := json.NewDecoder(resp.Body).Decode(&resultado); err != nil {
 			log.Println("iguana -> obfuscateJS:3 -> err:", err)
 			return "", err
@@ -70,6 +71,6 @@ func obfuscateJS(code []byte, url string, prefix string) (string, error) {
 		return "", errors.New(string(bodyBytes))
 	default:
 		log.Println("iguana -> obfuscateJS:7 -> StatusCode: ", resp.StatusCode)
-		return "", errUnknown
+		return "", utils.ErrUnknown
 	}
 }
