@@ -5,10 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	github.com/johnbalvin/iguana/utils"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/johnbalvin/iguana/utils"
 )
 
 func JS(code []byte, url string, prefix string) (string, error) {

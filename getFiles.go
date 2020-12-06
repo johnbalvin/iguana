@@ -2,10 +2,11 @@ package iguana
 
 import (
 	"fmt"
-	github.com/johnbalvin/iguana/files"
 	"log"
 	"path"
 	"strings"
+
+	"github.com/johnbalvin/iguana/files"
 )
 
 //GetFiles returns files at a given path

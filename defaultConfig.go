@@ -1,10 +1,11 @@
 package iguana
 
 import (
-	github.com/johnbalvin/iguana/files"
-	github.com/johnbalvin/iguana/obfuscator"
-	github.com/johnbalvin/iguana/utils"
 	"log"
+
+	"github.com/johnbalvin/iguana/files"
+	"github.com/johnbalvin/iguana/obfuscator"
+	"github.com/johnbalvin/iguana/utils"
 )
 
 //GetDefaultConfig returns the default configuration to use to hadle the files

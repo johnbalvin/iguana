@@ -2,9 +2,10 @@ package iguana
 
 import (
 	"fmt"
-	github.com/johnbalvin/iguana/files"
-	github.com/johnbalvin/iguana/utils"
 	"strings"
+
+	"github.com/johnbalvin/iguana/files"
+	"github.com/johnbalvin/iguana/utils"
 )
 
 //changePathWithURLWrapper changes all the paths of file content with URLs

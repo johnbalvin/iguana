@@ -1,6 +1,6 @@
 package iguana
 
-import github.com/johnbalvin/iguana/files"
+import "github.com/johnbalvin/iguana/files"
 
 //FuncObf represents function that is gonna be called to obfuscate the file
 type FuncObf func(files.Static) (string, error)
