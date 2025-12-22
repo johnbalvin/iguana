@@ -12,7 +12,7 @@ import (
 	"github.com/johnbalvin/iguana/files"
 )
 
-//addFiles add files to htmlFiles,staticFiles , also changes the inmediate relative path to a relative path base on the full path
+// addFiles add files to htmlFiles,staticFiles , also changes the inmediate relative path to a relative path base on the full path
 func (config Config) addFiles(workingPath string, htmlFiles map[string]files.HTML, staticFiles map[string]files.Static) {
 	if !config.SkipLogging {
 		fmt.Print(".")
@@ -98,7 +98,7 @@ func (config Config) addFiles(workingPath string, htmlFiles map[string]files.HTM
 		if _, ok := files.MimeTypeReplace[ext]; ok {
 			static.ChangeContent = true //verify is file can have dependencies
 		}
-		if strings.HasPrefix(static.Path, "./") {
+		if strings.HasPrefix(static.Path, "./") || strings.HasPrefix(static.Path, "../") {
 			writeToMapStatic(staticFiles, static.Path, static)
 		}
 	}
