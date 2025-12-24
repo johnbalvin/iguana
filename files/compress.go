@@ -11,9 +11,11 @@ func CompressBrotli(data []byte) ([]byte, error) {
 	var buf bytes.Buffer
 
 	w := brotli.NewWriterLevel(&buf, brotli.BestCompression)
-	defer w.Close()
-
 	if _, err := w.Write(data); err != nil {
+		w.Close()
+		return nil, err
+	}
+	if err := w.Close(); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
@@ -30,9 +32,11 @@ func CompressZstd(data []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer enc.Close()
-
 	if _, err := enc.Write(data); err != nil {
+		enc.Close()
+		return nil, err
+	}
+	if err := enc.Close(); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil
