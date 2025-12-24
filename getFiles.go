@@ -9,7 +9,7 @@ import (
 	"github.com/johnbalvin/iguana/files"
 )
 
-//GetFiles returns files at a given path
+// GetFiles returns files at a given path
 func (config Config) GetFiles(workingPath string) (map[string]files.HTML, map[string]files.Static, map[string]files.SW) {
 	if config.FuncReplaceRelPath == nil {
 		config.FuncReplaceRelPath = skippingDefault
@@ -17,7 +17,7 @@ func (config Config) GetFiles(workingPath string) (map[string]files.HTML, map[st
 	return config.setFiles(true, workingPath)
 }
 
-//GetFilesObf returns files at a given path filling it with it's obfuscated content
+// GetFilesObf returns files at a given path filling it with it's obfuscated content
 func (config Config) GetFilesObf(workingPath string) (map[string]files.HTML, map[string]files.Static, map[string]files.SW) {
 	if config.FuncReplaceRelPath == nil {
 		config.FuncReplaceRelPath = skippingDefault
@@ -81,6 +81,41 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 				htmlFiles[k].ServiceWorkers[swPath] = true
 			}
 		}
+	}
+	//compressing them all
+	var err error
+	for path, value := range htmlFiles {
+		value.ContentBR, err = files.CompressBrotli(value.Content)
+		if err != nil {
+			log.Println("br compression err: ", err)
+		}
+		value.ContentZstd, err = files.CompressZstd(value.Content)
+		if err != nil {
+			log.Println("Zstd compression err: ", err)
+		}
+		htmlFiles[path] = value
+	}
+	for path, value := range staticFiles {
+		value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
+		if err != nil {
+			log.Println("br compression err: ", err)
+		}
+		value.Content.ContentZstd, err = files.CompressZstd(value.Content.Me)
+		if err != nil {
+			log.Println("Zstd compression err: ", err)
+		}
+		staticFiles[path] = value
+	}
+	for path, value := range serviceWorkersToReturn {
+		value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
+		if err != nil {
+			log.Println("br compression err: ", err)
+		}
+		value.Content.ContentZstd, err = files.CompressZstd(value.Content.Me)
+		if err != nil {
+			log.Println("Zstd compression err: ", err)
+		}
+		serviceWorkersToReturn[path] = value
 	}
 	return htmlFiles, staticFiles, serviceWorkersToReturn
 }

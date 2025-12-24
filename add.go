@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
@@ -17,7 +18,7 @@ func (config Config) addFiles(workingPath string, htmlFiles map[string]files.HTM
 	if !config.SkipLogging {
 		fmt.Print(".")
 	}
-	subdirectories, err := ioutil.ReadDir(workingPath)
+	subdirectories, err := os.ReadDir(workingPath)
 	if err != nil {
 		log.Fatal("iguana -> addFiles:1 -> err:", err)
 	}

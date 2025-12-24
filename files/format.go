@@ -4,6 +4,8 @@ package files
 type HTML struct {
 	Path            string
 	Content         []byte
+	ContentBR       []byte
+	ContentZstd     []byte
 	Checksum        string
 	ServiceWorkers  map[string]bool
 	DependsFullPath map[string]bool
@@ -31,6 +33,8 @@ type SW struct {
 
 type staticInfo struct {
 	Me              []byte
+	ContentBR       []byte
+	ContentZstd     []byte
 	Checksum        string
 	URL             string
 	ID              string
