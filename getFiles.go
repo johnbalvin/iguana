@@ -14,6 +14,7 @@ func (config Config) GetFiles(workingPath string) (map[string]files.HTML, map[st
 	if config.FuncReplaceRelPath == nil {
 		config.FuncReplaceRelPath = skippingDefault
 	}
+	config.OriginalPath = workingPath
 	return config.setFiles(true, workingPath)
 }
 
@@ -22,6 +23,7 @@ func (config Config) GetFilesObf(workingPath string) (map[string]files.HTML, map
 	if config.FuncReplaceRelPath == nil {
 		config.FuncReplaceRelPath = skippingDefault
 	}
+	config.OriginalPath = workingPath
 	return config.setFiles(false, workingPath)
 }
 

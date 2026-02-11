@@ -54,7 +54,12 @@ func (config Config) addFiles(workingPath string, htmlFiles map[string]files.HTM
 				continue
 			}
 			rawDpendRelPath := strings.TrimSpace(dpendRelPath[1 : len(dpendRelPath)-1]) //removing delimiters and spaces to use path.Join
-			join := path.Join(workingPath, rawDpendRelPath)                             //this gives me full path
+			var join string
+			if strings.HasPrefix(rawDpendRelPath, "/") {
+				join = path.Join(config.OriginalPath, rawDpendRelPath)
+			} else {
+				join = path.Join(workingPath, rawDpendRelPath)
+			}                                                                           //this gives me full path
 			if strings.HasPrefix(workingPath, "./") && !strings.HasPrefix(join, "./") { //path.join removes "./" so I will just add it
 				join = "./" + join
 			}
