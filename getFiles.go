@@ -5,6 +5,7 @@ import (
 	"log"
 	"path"
 	"strings"
+	"sync"
 
 	"github.com/johnbalvin/iguana/files"
 )
@@ -84,30 +85,86 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 			}
 		}
 	}
-	/*
-		//compressing them all
-		var err error
-		for path, value := range htmlFiles {
-			value.ContentBR, err = files.CompressBrotli(value.Content)
-			if err != nil {
-				log.Println("br compression err: ", err)
+	//so this is the one that takes some secons to process
+	//In parallel for faster speed
+
+	//compressing them all
+	var wg sync.WaitGroup
+	var mutex sync.Mutex
+	//-----------html
+	chanMapHTML := make(chan string)
+	for range 10 {
+		go func() {
+			for path := range chanMapHTML {
+				value := htmlFiles[path]
+				var err error
+				value.ContentBR, err = files.CompressBrotli(value.Content)
+				if err != nil {
+					log.Println("br compression err: ", err)
+				}
+				mutex.Lock()
+				htmlFiles[path] = value
+				mutex.Unlock()
+				wg.Done()
 			}
-			htmlFiles[path] = value
-		}
-		for path, value := range staticFiles {
-			value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
-			if err != nil {
-				log.Println("br compression err: ", err)
+		}()
+	}
+	wg.Add(len(htmlFiles))
+	for path := range htmlFiles {
+		chanMapHTML <- path
+	}
+	wg.Wait()
+	close(chanMapHTML)
+	//---------
+	//staticfiles	chanMapStatic := make(chan string)
+	chanMapStatic := make(chan string)
+	for range 10 {
+		go func() {
+			for path := range chanMapStatic {
+				var err error
+				value := staticFiles[path]
+				value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
+				if err != nil {
+					log.Println("br compression err: ", err)
+				}
+				mutex.Lock()
+				staticFiles[path] = value
+				mutex.Unlock()
+				wg.Done()
 			}
-			staticFiles[path] = value
-		}
-		for path, value := range serviceWorkersToReturn {
-			value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
-			if err != nil {
-				log.Println("br compression err: ", err)
+		}()
+	}
+	wg.Add(len(staticFiles))
+	for key := range staticFiles {
+		chanMapStatic <- key
+	}
+	wg.Done()
+	close(chanMapStatic)
+
+	//service worker
+	chanServiceWokers := make(chan string)
+	for range 10 {
+		go func() {
+			for path := range chanServiceWokers {
+				var err error
+				value := serviceWorkersToReturn[path]
+				value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
+				if err != nil {
+					log.Println("br compression err: ", err)
+				}
+				mutex.Lock()
+				serviceWorkersToReturn[path] = value
+				mutex.Unlock()
+				wg.Done()
+
 			}
-			serviceWorkersToReturn[path] = value
-		}
-	*/
+		}()
+	}
+	wg.Add(len(serviceWorkersToReturn))
+	for path := range serviceWorkersToReturn {
+		chanServiceWokers <- path
+	}
+	wg.Wait()
+	close(chanServiceWokers)
 	return htmlFiles, staticFiles, serviceWorkersToReturn
 }
