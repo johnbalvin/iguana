@@ -138,7 +138,7 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 	for key := range staticFiles {
 		chanMapStatic <- key
 	}
-	wg.Done()
+	wg.Wait()
 	close(chanMapStatic)
 
 	//service worker
