@@ -91,10 +91,6 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 		if err != nil {
 			log.Println("br compression err: ", err)
 		}
-		value.ContentZstd, err = files.CompressZstd(value.Content)
-		if err != nil {
-			log.Println("Zstd compression err: ", err)
-		}
 		htmlFiles[path] = value
 	}
 	for path, value := range staticFiles {
@@ -102,20 +98,12 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 		if err != nil {
 			log.Println("br compression err: ", err)
 		}
-		value.Content.ContentZstd, err = files.CompressZstd(value.Content.Me)
-		if err != nil {
-			log.Println("Zstd compression err: ", err)
-		}
 		staticFiles[path] = value
 	}
 	for path, value := range serviceWorkersToReturn {
 		value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
 		if err != nil {
 			log.Println("br compression err: ", err)
-		}
-		value.Content.ContentZstd, err = files.CompressZstd(value.Content.Me)
-		if err != nil {
-			log.Println("Zstd compression err: ", err)
 		}
 		serviceWorkersToReturn[path] = value
 	}
