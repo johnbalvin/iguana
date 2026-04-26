@@ -90,15 +90,16 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 
 	//compressing them all
 	var wg sync.WaitGroup
-	var mutex sync.Mutex
+	var mutex sync.RWMutex
 	//-----------html
 	chanMapHTML := make(chan string)
+	var keys []string
 	for range 5 {
 		go func() {
 			for path := range chanMapHTML {
-				mutex.Lock()
+				mutex.RLock()
 				value := htmlFiles[path]
-				mutex.Unlock()
+				mutex.RUnlock()
 				var err error
 				value.ContentBR, err = files.CompressBrotli(value.Content)
 				if err != nil {
@@ -113,9 +114,10 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 	}
 	wg.Add(len(htmlFiles))
 	for path := range htmlFiles {
-		mutex.Lock()
+		keys = append(keys, path)
+	}
+	for _, path := range keys {
 		chanMapHTML <- path
-		mutex.Unlock()
 	}
 	wg.Wait()
 	close(chanMapHTML)
@@ -126,9 +128,9 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 		go func() {
 			for path := range chanMapStatic {
 				var err error
-				mutex.Lock()
+				mutex.RLock()
 				value := staticFiles[path]
-				mutex.Unlock()
+				mutex.RUnlock()
 				value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
 				if err != nil {
 					log.Println("br compression err: ", err)
@@ -141,10 +143,12 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 		}()
 	}
 	wg.Add(len(staticFiles))
+	keys = []string{}
 	for key := range staticFiles {
-		mutex.Lock()
-		chanMapStatic <- key
-		mutex.Unlock()
+		keys = append(keys, key)
+	}
+	for _, path := range keys {
+		chanMapStatic <- path
 	}
 	wg.Wait()
 	close(chanMapStatic)
@@ -155,9 +159,9 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 		go func() {
 			for path := range chanServiceWokers {
 				var err error
-				mutex.Lock()
+				mutex.RLock()
 				value := serviceWorkersToReturn[path]
-				mutex.Unlock()
+				mutex.RUnlock()
 				value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
 				if err != nil {
 					log.Println("br compression err: ", err)
@@ -171,10 +175,12 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 		}()
 	}
 	wg.Add(len(serviceWorkersToReturn))
+	keys = []string{}
 	for path := range serviceWorkersToReturn {
-		mutex.Lock()
+		keys = append(keys, path)
+	}
+	for _, path := range keys {
 		chanServiceWokers <- path
-		mutex.Unlock()
 	}
 	wg.Wait()
 	close(chanServiceWokers)
