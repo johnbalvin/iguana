@@ -96,7 +96,9 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 	for range 10 {
 		go func() {
 			for path := range chanMapHTML {
+				mutex.Lock()
 				value := htmlFiles[path]
+				mutex.Unlock()
 				var err error
 				value.ContentBR, err = files.CompressBrotli(value.Content)
 				if err != nil {
@@ -122,7 +124,9 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 		go func() {
 			for path := range chanMapStatic {
 				var err error
+				mutex.Lock()
 				value := staticFiles[path]
+				mutex.Unlock()
 				value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
 				if err != nil {
 					log.Println("br compression err: ", err)
@@ -147,7 +151,9 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 		go func() {
 			for path := range chanServiceWokers {
 				var err error
+				mutex.Lock()
 				value := serviceWorkersToReturn[path]
+				mutex.Unlock()
 				value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
 				if err != nil {
 					log.Println("br compression err: ", err)
