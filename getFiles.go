@@ -113,7 +113,9 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 	}
 	wg.Add(len(htmlFiles))
 	for path := range htmlFiles {
+		mutex.Lock()
 		chanMapHTML <- path
+		mutex.Unlock()
 	}
 	wg.Wait()
 	close(chanMapHTML)
@@ -140,7 +142,9 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 	}
 	wg.Add(len(staticFiles))
 	for key := range staticFiles {
+		mutex.Lock()
 		chanMapStatic <- key
+		mutex.Unlock()
 	}
 	wg.Wait()
 	close(chanMapStatic)
@@ -168,7 +172,9 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 	}
 	wg.Add(len(serviceWorkersToReturn))
 	for path := range serviceWorkersToReturn {
+		mutex.Lock()
 		chanServiceWokers <- path
+		mutex.Unlock()
 	}
 	wg.Wait()
 	close(chanServiceWokers)
