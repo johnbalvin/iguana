@@ -84,28 +84,30 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 			}
 		}
 	}
-	//compressing them all
-	var err error
-	for path, value := range htmlFiles {
-		value.ContentBR, err = files.CompressBrotli(value.Content)
-		if err != nil {
-			log.Println("br compression err: ", err)
+	/*
+		//compressing them all
+		var err error
+		for path, value := range htmlFiles {
+			value.ContentBR, err = files.CompressBrotli(value.Content)
+			if err != nil {
+				log.Println("br compression err: ", err)
+			}
+			htmlFiles[path] = value
 		}
-		htmlFiles[path] = value
-	}
-	for path, value := range staticFiles {
-		value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
-		if err != nil {
-			log.Println("br compression err: ", err)
+		for path, value := range staticFiles {
+			value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
+			if err != nil {
+				log.Println("br compression err: ", err)
+			}
+			staticFiles[path] = value
 		}
-		staticFiles[path] = value
-	}
-	for path, value := range serviceWorkersToReturn {
-		value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
-		if err != nil {
-			log.Println("br compression err: ", err)
+		for path, value := range serviceWorkersToReturn {
+			value.Content.ContentBR, err = files.CompressBrotli(value.Content.Me)
+			if err != nil {
+				log.Println("br compression err: ", err)
+			}
+			serviceWorkersToReturn[path] = value
 		}
-		serviceWorkersToReturn[path] = value
-	}
+	*/
 	return htmlFiles, staticFiles, serviceWorkersToReturn
 }

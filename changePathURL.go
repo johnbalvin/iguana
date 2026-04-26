@@ -8,9 +8,9 @@ import (
 	"github.com/johnbalvin/iguana/utils"
 )
 
-//changePathWithURLWrapper changes all the paths of file content with URLs
-//so each file content that have relative path dependencies
-//are gonna get change by an URL as defined with the function config.FunIDURL
+// changePathWithURLWrapper changes all the paths of file content with URLs
+// so each file content that have relative path dependencies
+// are gonna get change by an URL as defined with the function config.FunIDURL
 func (config Config) changePathWithURLWrapper(shouldIObfuscate bool, workingPath string, serviceWorkers map[string]string, staticFiles map[string]files.Static) {
 	var err error
 	for _, static := range staticFiles {
@@ -35,7 +35,7 @@ func (config Config) changePathWithURLWrapper(shouldIObfuscate bool, workingPath
 	}
 }
 
-//changePathWithURL it's the recursive function that replace all the paths of files's content
+// changePathWithURL it's the recursive function that replace all the paths of files's content
 func (config Config) changePathWithURL(shouldIObfuscate bool, workingPath string, static files.Static, sw map[string]string, staticFiles map[string]files.Static, depthDependency []string, deph int) ([]string, error) {
 
 	if len(static.DependsFullPath) == 0 {
@@ -95,8 +95,6 @@ func (config Config) changePathWithURL(shouldIObfuscate bool, workingPath string
 	staticFiles[static.Path] = static
 	return nil, nil
 }
-
-var current int
 
 func replaceURL(shouldIObfuscate, skipLogging bool, parentPath string, content []byte, swPath string, sw map[string]string, staticFiles map[string]files.Static) []byte {
 	var inexistenDepencies []string
