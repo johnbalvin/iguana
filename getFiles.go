@@ -93,7 +93,7 @@ func (config Config) setFiles(shouldIObfuscate bool, workingPath string) (map[st
 	var mutex sync.Mutex
 	//-----------html
 	chanMapHTML := make(chan string)
-	for range 10 {
+	for range 5 {
 		go func() {
 			for path := range chanMapHTML {
 				mutex.Lock()
